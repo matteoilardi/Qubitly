@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+
+# Tests
+.pytest_cache/
+.hypothesis/
+
+# Packaging
+*.egg-info/
+
+# OS cruft
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+experiments.ipynb

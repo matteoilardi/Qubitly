@@ -1,0 +1,11 @@
+-e .
+
+# Runtime dependencies
+jax
+numpy
+
+# Development tools
+pytest
+hypothesis
+# black
+# mypy
