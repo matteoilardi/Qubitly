@@ -1,4 +1,4 @@
-# QCLite - Lightweight Quantum Computer Simulator
+# Qubitly
 
 A minimal quantum simulator in pure Python, using JAX.
 
@@ -14,7 +14,7 @@ Add development tools:
 pip install -r requirements.txt
 ```
 
-## Example: Bell state creation
+## Example: Bell state preparation
 
 ```python
 import Qubitly as qbl
