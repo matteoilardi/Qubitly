@@ -60,7 +60,7 @@ class WaveFunction():
         return 2**self.n_qubits
 
     def __str__(self):
-        return f"Wave function with amplitudes {self.amplitudes}"
+        return f"WaveFunction: {self.amplitudes}"
 
     def __eq__(self, other):
         if not isinstance(other, WaveFunction):
