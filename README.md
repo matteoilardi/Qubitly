@@ -21,10 +21,10 @@ import Qubitly as qbl
 import jax
 
 # Define the circuit
-bell_circuit = qbl.QuantumCircuit([
+bell_circuit = qbl.QuantumCircuit(
     qbl.Hadamard(0),
     qbl.CNOT(control=0, target=1)
-])
+)
 
 # Jit it, if you want
 bell_circuit_jit = jax.jit(bell_circuit)
@@ -33,7 +33,7 @@ bell_circuit_jit = jax.jit(bell_circuit)
 _00 = qbl.WaveFunction.from_string('00')
 
 # Perform calculation
-_bell, _ = bell_circuit_jit(qbl._NO_RANDOMNESS, _00)
+_bell, _ = bell_circuit_jit(_00)
 
 print(_bell) # Output: 
 # WaveFunction: [0.70710677+0.j 0.        +0.j 0.        +0.j 0.70710677+0.j]

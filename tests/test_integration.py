@@ -27,8 +27,6 @@ def test_quantum_teleportation(_input):
     key = jrand.key(2)
     _prepared_input = prepare_for_teleportation(_input)
     
-    _raw_output, user_vars = QuantumTeleportation(key, _prepared_input)
+    _raw_output, user_vars = QuantumTeleportation(_prepared_input, key)
     _output = extract_teleported_qubit(_raw_output, user_vars)
-    print(_input)
-    print(_output)
     assert _output == pytest.approx(_input)

@@ -2,8 +2,8 @@ import jax
 import jax.numpy as jnp
 from collections import Counter
 import functools
-from typing import Protocol
-from Qubitly.states import WaveFunction
+from typing import Protocol, NamedTuple
+from Qubitly.states import WaveFunction, _NO_RANDOMNESS
 from Qubitly.gates import Operator
 
 class CircuitError(Exception):
@@ -25,7 +25,6 @@ class CircuitError(Exception):
         return self._format_message()
 
 
-
 class CircuitLayer():
     '''
     This class is intended to provide a user-friendly interface for circuit definition.
@@ -33,7 +32,7 @@ class CircuitLayer():
     In fact, the codebase does not include any form of gate-merging optimization as of now.
     '''
 
-    def __init__(self, gates: list[Operator]):
+    def __init__(self, *gates: Operator):
         # Check if there are two or more gates acting on the same qubit
         sites = [site for gate in gates for site in gate.sites]
         if len(sites) != len(set(sites)):
@@ -57,26 +56,30 @@ class CircuitStep(Protocol):
     def __call__(self, key, wf: WaveFunction, user_vars: dict) -> tuple[jnp.ndarray, WaveFunction, dict]: ...
 
 
+class CircuitResult(NamedTuple):
+    wf: WaveFunction
+    classsical_vars: dict
+
 
 class QuantumCircuit:
-    def __init__(self, steps: tuple[CircuitStep]):
+    def __init__(self, *steps: CircuitStep):
         self.steps = steps
 
         # Define a jitted version of __call__ and store in a data member
         # Unfortunately, it seems impossible to jit __call__ from within the class (can't transform __call__ inside __init__): one should jit instances instead
-        @functools.partial(jax.jit, static_argnames=("steps",))
-        def jit_call_wrapper(key, wf: WaveFunction, steps: tuple[CircuitStep]):
+        @functools.partial(jax.jit)
+        def jit_call_wrapper(key, wf: WaveFunction, user_vars: dict):
             final_result = functools.reduce(lambda state, step: step(*state), 
-                                    steps, (key, wf, {}))
-            return final_result[1], final_result[2]
+                                    self.steps, (key, wf, user_vars))
+            return CircuitResult(*final_result[1:])
         self.jit_call_wrapper = jit_call_wrapper
         
 
-    def __call__(self, key, wf: WaveFunction) -> tuple[jnp.ndarray, WaveFunction, dict]:
+    def __call__(self, wf: WaveFunction, key = _NO_RANDOMNESS, **user_vars) -> CircuitResult:
         final_result = functools.reduce(lambda state, step: step(*state), 
-                                self.steps, (key, wf, {}))
-        return final_result[1], final_result[2]
+                                self.steps, (key, wf, user_vars))
+        return CircuitResult(*final_result[1:])
 
-    def jit_call(self, key, wf: WaveFunction) -> tuple[jnp.ndarray, WaveFunction, dict]:
-        return self.jit_call_wrapper(key, wf, self.steps)
+    def jit_call(self, wf: WaveFunction, key = _NO_RANDOMNESS, **user_vars) -> CircuitResult:
+        return self.jit_call_wrapper(key, wf, user_vars)
         

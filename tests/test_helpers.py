@@ -100,5 +100,5 @@ def test_measure_computational_basis(_00_arr, _11_arr, _0plus_arr, _bell0_arr):
     assert _measured_1 == pytest.approx(normalize_array(_0plus_arr)) or _measured_1 == pytest.approx(normalize_array(_11_arr))
 
 
-# Better to divide test in smaller units with specific purposes
-# Tests for randomness?
+# TODO divide test in smaller units with specific purposes
+# TODO Tests for randomness?

@@ -2,7 +2,7 @@ from __future__ import annotations # required for methods of a class to return a
 import jax
 import jax.numpy as jnp
 import numpy as np
-from typing import Optional, Union
+from typing import Optional, Union, Callable, TypeAlias
 from Qubitly.states import WaveFunction
 
 class SimpleOperator:
@@ -74,7 +74,7 @@ class SimpleSigmaZ(SimpleOperator):
         super().__init__(matrix=sigmaZ, n_qubits=1)
 
 class SimplePhaseGate(SimpleOperator):
-    def __init__(self, phase: jnp.complex64):
+    def __init__(self, phase: complex):
         self.phase = phase
         matrix = jnp.array([[1.0, 0.0], 
                             [0.0, jnp.exp(1.0j * phase)]], dtype=jnp.complex64)
@@ -260,6 +260,39 @@ class ClassicalCZ(ClassicalCtrlOperator):
     def __init__(self, **kwargs):
         super().__init__(SimpleSigmaZ(), **kwargs)
 
+
+
+SimpleOperatorFn: TypeAlias = Callable[[complex], SimpleOperator]
+
+# Design choice: ParametrizedOperator does not inherit from operator, but it creates an instance of Operator at ciecuit-runtime on the fly
+class ParametrizedOperator:
+    def __init__(self, simple_op_fn: SimpleOperatorFn, param_name: str, sites: int | list[int]):
+        # NOTE that input validation will be done at circuit-runtime, i. e. inside __call__(), i. e. inside the constructor of Operator
+        self.simple_op_fn = simple_op_fn
+        self.param_name = param_name
+
+        if not isinstance(sites, list): # TODO Perhaps the same logic can be applied somewhere else
+            sites = [sites]
+        self.sites = sites
+
+    def __call__(self, key, wf: WaveFunction, user_vars: dict) -> tuple[jnp.ndarray, WaveFunction, dict]:
+        if self.param_name not in user_vars:
+            raise KeyError(f"Parameter {self.param_name} not defined")
+        
+        simple_op = self.simple_op_fn(user_vars[self.param_name])
+        op = Operator(simple_op, self.sites)
+        return op(key, wf, user_vars)
+        
+        
+class ParametrizedPhaseGate(ParametrizedOperator):
+    def __init__(self, param_name: str, sites: list[int]):
+        super().__init__(lambda phase: SimplePhaseGate(phase), param_name, sites)
+        
+
+
+
+    
+    
 
 
 # HELPER FUNCTIONS

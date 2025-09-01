@@ -19,7 +19,7 @@ def extract_teleported_qubit(wf: WaveFunction, user_vars: dict):
     new_amps = wf.amplitudes[mask]
     return WaveFunction(new_amps)
 
-QuantumTeleportation = QuantumCircuit((
+QuantumTeleportation = QuantumCircuit(
     # Bell state creation on qubits 1, 2
     Hadamard(1),
     CNOT(control=1, target=2),
@@ -34,7 +34,4 @@ QuantumTeleportation = QuantumCircuit((
     # Measurement-controlled gates
     ClassicalCZ(control="m0", target=2),
     ClassicalCX(control="m1", target=2),
-))
-
-# add kwarg for second arg of CompBasisMeasurement
-# Extract relevant ampolitudes from result, based on m0 and m1
+)
