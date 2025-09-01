@@ -73,6 +73,30 @@ class SimpleSigmaZ(SimpleOperator):
                             [0.0, -1.0]], dtype=jnp.complex64)
         super().__init__(matrix=sigmaZ, n_qubits=1)
 
+# TODO solve real/complex issue: parameters must be real in order to have unitary gates, but they must be of a complex dtype to allow holomorphic differentiation
+
+class SimpleRx(SimpleOperator):
+    def __init__(self, theta: complex):
+        self.theta = theta
+        matrix = jnp.array([[jnp.cos(theta/2.), -1.j*jnp.sin(theta/2.)],
+                            [-1.j*jnp.sin(theta/2.), jnp.cos(theta/2.)]], dtype=jnp.complex64)
+        super().__init__(matrix=matrix, n_qubits=1)
+
+class SimpleRy(SimpleOperator):
+    def __init__(self, theta: complex):
+        self.theta = theta
+        matrix = jnp.array([[jnp.cos(theta/2.), -jnp.sin(theta/2.)],
+                            [jnp.sin(theta/2.), jnp.cos(theta/2.)]], dtype=jnp.complex64)
+        super().__init__(matrix=matrix, n_qubits=1)
+
+class SimpleRz(SimpleOperator):
+    def __init__(self, theta: complex):
+        self.theta = theta
+        matrix = jnp.array([[jnp.exp(-1.j*theta/2.), 0.],
+                            [0., jnp.exp(1.j*theta/2.)]], dtype=jnp.complex64)
+        super().__init__(matrix=matrix, n_qubits=1)
+
+
 class SimplePhaseGate(SimpleOperator):
     def __init__(self, phase: complex):
         self.phase = phase
@@ -287,11 +311,18 @@ class ParametrizedOperator:
 class ParametrizedPhaseGate(ParametrizedOperator):
     def __init__(self, param_name: str, sites: list[int]):
         super().__init__(lambda phase: SimplePhaseGate(phase), param_name, sites)
-        
 
+class ParametrizedRx(ParametrizedOperator):
+    def __init__(self, param_name: str, sites: list[int]):
+        super().__init__(lambda theta: SimpleRx(theta), param_name, sites)
 
+class ParametrizedRy(ParametrizedOperator):
+    def __init__(self, param_name: str, sites: list[int]):
+        super().__init__(lambda theta: SimpleRy(theta), param_name, sites)
 
-    
+class ParametrizedRz(ParametrizedOperator):
+    def __init__(self, param_name: str, sites: list[int]):
+        super().__init__(lambda theta: SimpleRz(theta), param_name, sites)
     
 
 
