@@ -30,7 +30,7 @@ class SimpleOperator:
             raise ValueError("Operator size doesn't match the size of the object to which it's applied")
 
         if isinstance(other, WaveFunction):
-            amplitudes = self.matrix @ wf.amplitudes
+            amplitudes = self.matrix @ other.amplitudes
             return WaveFunction(amplitudes=amplitudes, n_qubits=self.n_qubits)
         elif isinstance(other, SimpleOperator):
              matrix = self.matrix @ other.matrix
@@ -40,6 +40,9 @@ class SimpleOperator:
             
     def __mul__(self, other: WaveFunction | SimpleOperator) -> WaveFunction | SimpleOperator:
         return self.apply(other)
+
+    def expectation_value(self, wf: WaveFunction) -> float32:
+        return jnp.real(wf.overlap(self.apply(wf)))
             
     @property
     def is_hermitian(self) -> bool:
@@ -150,8 +153,7 @@ class Operator:
         self.sites = sites
         
       
-    # def apply(self, other: WaveFunction | Operator) -> WaveFunction | Operator:
-    def apply(self, other: WaveFunction) -> WaveFunction:
+    def apply(self, other: WaveFunction | Operator) -> WaveFunction | Operator:
         if isinstance(other, WaveFunction):
             
             # jax.lax.cond is not required here because n_sites is treated as a static argument in every instance of Operator
@@ -174,8 +176,7 @@ class Operator:
             return NotImplemented
             
         
-    # def __mul__(self, other: WaveFunction | Operator) -> WaveFunction | Operator:
-    def __mul__(self, other: WaveFunction) -> WaveFunction:
+    def __mul__(self, other: WaveFunction | Operator) -> WaveFunction | Operator:
         return self.apply(other)
 
     def __call__(self, key, wf: WaveFunction, user_vars: dict) -> tuple[jnp.ndarray, WaveFunction, dict]:
@@ -184,6 +185,9 @@ class Operator:
     @property
     def n_sites(self) -> int:
        return len(self.sites)
+
+    def expectation_value(self, wf: WaveFunction) -> float32:
+        return jnp.real(wf.overlap(self.apply(wf)))
 
 
 class Hadamard(Operator):

@@ -51,6 +51,7 @@ class WaveFunction():
         # A method that normalizes a vector must be defined separately in order to jit it
         self.amplitudes = normalize_array(self.amplitudes)
 
+
     @property
     def norm(self):
         return jnp.linalg.norm(self.amplitudes)
@@ -58,6 +59,9 @@ class WaveFunction():
     @property
     def dim(self):
         return 2**self.n_qubits
+
+    def overlap(self, other: WaveFunction) -> jnp.complex64:
+        return jnp.dot(self.amplitudes, other.amplitudes)
 
     def __str__(self):
         return f"WaveFunction: {self.amplitudes}"
@@ -95,6 +99,19 @@ jax.tree_util.register_pytree_node(
 )
 
 
+@jax.jit
+def couple(wf1: WaveFunction, wf2: WaveFunction) -> WaveFunction:
+    n_qubits_result = wf1.n_qubits + wf2.n_qubits
+
+    def result_amplitude(p: int):
+        p1 = (p >> wf2.n_qubits)
+        p2 = (p & (2**wf2.n_qubits - 1))
+        return wf1.amplitudes[p1] * wf2.amplitudes[p2]
+    amps_result = jax.vmap(result_amplitude)(jnp.arange(2**n_qubits_result))
+    
+    return WaveFunction(amps_result)
+    
+
 # Dummy key to pass to circuits that don't involve random number generation
 # DUMMY_KEY = jrand.key(0)
 # However, probably due to key tracing overhead, some QuantumCircuits that require no randomness get a jitted version that's even slower than the non jitted one.
@@ -116,7 +133,7 @@ class CompBasisMeasurement:
     def __call__(self, key, wf: WaveFunction, user_vars: dict) -> tuple[jnp.ndarray, WaveFunction, dict]:
         key, subkey = jrand.split(key)
 
-        # TODO When implementing simultaneous mesurement of multiple qubits use _measure_all_computational_basis if set(self.qubits_to_measure) == set(np.arange(wf.dim))
+        # TODO When implementing simultaneous measurement of multiple qubits use _measure_all_computational_basis if set(self.qubits_to_measure) == set(np.arange(wf.dim))
         key, outcome, measured_amplitudes = _measure_computational_basis(subkey, wf.amplitudes, jnp.array([self.qubit_to_measure]))
 
         user_vars[self.user_var] = outcome

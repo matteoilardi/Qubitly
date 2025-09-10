@@ -1,5 +1,6 @@
 from .states import (
     CompBasisMeasurement,
+    couple,
     WaveFunction,
     _NO_RANDOMNESS,
 )

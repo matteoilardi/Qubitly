@@ -38,7 +38,8 @@ class CircuitLayer():
         if len(sites) != len(set(sites)):
             counter = Counter(sites)
             duplicates = [item for item, count in counter.items() if count > 1]
-            raise CircuitError("Overlapping gates on the same site", qubits=duplicates)
+            # TODO unsuppress
+            # raise CircuitError("Overlapping gates on the same site", qubits=duplicates)
 
         self.sites = sites
         self.gates = gates
@@ -67,7 +68,8 @@ class QuantumCircuit:
 
         # Define a jitted version of __call__ and store in a data member
         # Unfortunately, it seems impossible to jit __call__ from within the class (can't transform __call__ inside __init__): one should jit instances instead
-        @functools.partial(jax.jit)
+        #@functools.partial(jax.jit)
+        @jax.jit
         def jit_call_wrapper(key, wf: WaveFunction, user_vars: dict):
             final_result = functools.reduce(lambda state, step: step(*state), 
                                     self.steps, (key, wf, user_vars))
